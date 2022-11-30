@@ -1,128 +1,74 @@
 const express = require("express");
-const app = express();
 const cors = require("cors");
+const app = express();
 const mongodb = require("mongodb");
 const mongoclient = mongodb.MongoClient;
-const URL = "mongodb+srv://admin:admin123@cluster0.zfkqxf5.mongodb.net/?retryWrites=true&w=majority";  //process.env.DB;
+const dotenv = require("dotenv").config();
+const URL = process.env.DB;
+const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET;
+const nodemailer = require("nodemailer");
 
 
 app.use(
-    cors({
-      orgin:"http://localhost:3000",
-    })
-  );
+  cors({
+    orgin:"http://localhost:3000",
+  })
+);
 
-  
 app.use(express.json());
 
-//register_users
-app.post("/user", async (req, res) => {
+let account = [];
+
+app.post("/user/register", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
     const db = connection.db("pizza_application");
+
+    //hash
+    var salt = await bcrypt.genSalt(10); //$2b$10$TuImFpJf327l0XDn5.Ropu
+    var hash = await bcrypt.hash(req.body.password, salt); //$2b$10$h0vKL1wJUpyhf0Q2EHPbcuzeih1kCX7c891uS70nB5FFjRkBSaDHC
+    // console.log(hash);
+
+    req.body.password = hash;
+
     const user = await db.collection("users").insertOne(req.body);
     await connection.close();
     res.json({ message: "user created" });
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong for user creation" });
+    res.status(500).json({ message: "Something went wrong" });
   }
 });
 
-//get_users
-app.get("/users", async (req, res) => {
+app.post("/login", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
     const db = connection.db("pizza_application");
-    const users = await db.collection("users").find({}).toArray();
-    await connection.close();
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ message: "Something went wrong for user creation" });
-  }
-});
 
-//update_users
-app.put("/user/:id", async (req, res) => {
-  try {
-    const connection = await mongoclient.connect(URL);
-    const db = connection.db("pizza_application");
-    const userData = await db
+    const user = await db
       .collection("users")
-      .findOne({ _id: mongodb.ObjectId(req.params.id) });
-
-    if (userData) {
-      //select the Collection
-      //Do operation (CRUD)
-      delete req.body._id
-      const user = await db
-        .collection("users")
-        .updateOne(
-          { _id: mongodb.ObjectId(req.params.id) },
-          { $set: req.body }
-        );
-
-      //close the connection
+      .findOne({ email: req.body.email });
       await connection.close();
-
-      res.json(user);
-    } else {
-      res.status(404).json({ message: "User can't Update" });
+      console.log(user.email);
+    if (user) {
+      const compare = await bcrypt.compare(req.body.password, user.password);
+      if (compare) {
+        const token = jwt.sign({_id:user._id},JWT_SECRET,{expiresIn:"2m"})
+        if(user.user_type == "admin"){
+          res.json({ message: "admin"});
+      }else{
+        res.json({ message: "user"})
+      }
+        
+      } else {
+        res.json({ message: "username or password incorrect" });
+      }
+    }else{
+      res.json({ message: "username or password incorrect" });
     }
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Something went wrong" });
-  }
-});
-
-app.get("/user/:id", async (req, res) => {
-  try {
-    //connect the Database
-    const connection = await mongoclient.connect(URL);
-
-    //select the DB
-    const db = connection.db("pizza_application");
-
-    //select the Collection
-    //Do operation (CRUD)
-    const userData = await db
-      .collection("users")
-      .findOne({ _id: mongodb.ObjectId(req.params.id) });
-
-    //close the connection
-    await connection.close();
-
-    if (userData) {
-      res.json(userData);
-    } else {
-      res.status(404).json({ message: "User Not Found" });
-    }
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Something went wrong" });
-  }
-  
-});
-
-app.delete("/user/:id", async (req, res) => {
-  try {
-    const connection = await mongoclient.connect(URL);
-    const db = connection.db("pizza_application");
-
-    const productData = await db
-      .collection("users")
-      .findOne({ _id: mongodb.ObjectId(req.params.id) });
-
-    if (productData) {
-      const product = await db
-        .collection("users")
-        .deleteOne({ _id: mongodb.ObjectId(req.params.id) });
-      await connection.close();
-      res.json(product);
-    } else {
-      res.status(404).json({ message: "User Not Found" });
-    }
-  } catch (error) {
-    res.status(500).json({ message: "Something went wrong" });
+    res.status(400).json({ message: "Something went wrong" });
   }
 });
 
