@@ -22,6 +22,7 @@ app.use(express.json());
 
 let account = [];
 
+//create_user
 app.post("/user/register", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
@@ -42,6 +43,7 @@ app.post("/user/register", async (req, res) => {
   }
 });
 
+//user-login
 app.post("/login", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
@@ -74,6 +76,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
+//sent msg to register email id
 app.post("/forgot", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
@@ -116,6 +119,7 @@ app.post("/forgot", async (req, res) => {
   }
 });
 
+//update password from link
 app.post("/reset/:userId", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
