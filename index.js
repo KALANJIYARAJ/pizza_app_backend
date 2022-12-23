@@ -200,4 +200,17 @@ app.post("/veggies_meats", async (req, res) => {
   }
 });
 
+//get veggies_meats
+app.get("/veggies_meats", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+    const veggies_meats = await db.collection("veggies_meats").find({}).toArray();
+    await connection.close();
+    res.json(veggies_meats);
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong for user creation" });
+  }
+});
+
 app.listen(process.env.PORT || 3003);
