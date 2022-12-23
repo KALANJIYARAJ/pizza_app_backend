@@ -185,4 +185,19 @@ app.post("/pizza/pId", async (req, res) => {
   }
 });
 
+//create veggies and meats
+app.post("/veggies_meats", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+    const veggies_meats = await db.collection("veggies_meats").insertOne(req.body);
+    await connection.close();
+    res.json({ message: "veggies_meats created" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong for pizza creation" });
+  }
+});
+
 app.listen(process.env.PORT || 3003);
