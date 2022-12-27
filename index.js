@@ -60,11 +60,7 @@ app.post("/login", async (req, res) => {
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
           expiresIn: "2m",
         });
-        if (user.user_type == "admin") {
-          res.json({ message: "admin" });
-        } else {
-          res.json({ message: "user" });
-        }
+      res.json(user);
       } else {
         res.json({ message: "username or password incorrect" });
       }
@@ -200,7 +196,7 @@ app.post("/veggies_meats", async (req, res) => {
   }
 });
 
-//get veggies_meats
+//node
 app.get("/veggies_meats", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
@@ -210,6 +206,21 @@ app.get("/veggies_meats", async (req, res) => {
     res.json(veggies_meats);
   } catch (error) {
     res.status(500).json({ message: "Something went wrong for user creation" });
+  }
+});
+
+//order
+app.post("/order", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+    const order = await db.collection("order").insertOne(req.body);
+    await connection.close();
+    res.json({ message: "order created" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong for order creation" });
   }
 });
 
