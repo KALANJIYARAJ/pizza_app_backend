@@ -53,7 +53,6 @@ app.post("/login", async (req, res) => {
       .collection("users")
       .findOne({ email: req.body.email });
     await connection.close();
-    console.log(user.email);
     if (user) {
       const compare = await bcrypt.compare(req.body.password, user.password);
       if (compare) {
