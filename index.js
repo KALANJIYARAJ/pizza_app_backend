@@ -60,7 +60,7 @@ app.post("/login", async (req, res) => {
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
           expiresIn: "2m",
         });
-      res.json(user);
+        res.json(user);
       } else {
         res.json({ message: "username or password incorrect" });
       }
@@ -105,11 +105,10 @@ app.post("/forgot", async (req, res) => {
         console.log(error);
         return;
       }
-      transporter.close();  
+      transporter.close();
     });
-  
-      res.json({message:"Message sent"});
-   
+
+    res.json({ message: "Message sent" });
   } catch (error) {
     res.status(400).send({ sucess: false, msg: error.message });
   }
@@ -186,7 +185,9 @@ app.post("/veggies_meats", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
     const db = connection.db("pizza_application");
-    const veggies_meats = await db.collection("veggies_meats").insertOne(req.body);
+    const veggies_meats = await db
+      .collection("veggies_meats")
+      .insertOne(req.body);
     await connection.close();
     res.json({ message: "veggies_meats created" });
   } catch (error) {
@@ -201,7 +202,10 @@ app.get("/veggies_meats", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
     const db = connection.db("pizza_application");
-    const veggies_meats = await db.collection("veggies_meats").find({}).toArray();
+    const veggies_meats = await db
+      .collection("veggies_meats")
+      .find({})
+      .toArray();
     await connection.close();
     res.json(veggies_meats);
   } catch (error) {
@@ -210,6 +214,7 @@ app.get("/veggies_meats", async (req, res) => {
 });
 
 //order
+//post order
 app.post("/order", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
@@ -221,6 +226,42 @@ app.post("/order", async (req, res) => {
     res
       .status(500)
       .json({ message: "Something went wrong for order creation" });
+  }
+});
+
+//get order
+app.get("/order/:user_id", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+    const order = await db
+      .collection("order")
+      .find({ user_id: req.params.user_id })
+      .toArray();
+    await connection.close();
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong for get order" });
+  }
+});
+
+//cancel order
+app.put("/ordercansel/:cansel_id", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+    const cansel = await db
+    .collection("order")
+    .updateOne(
+      { _id: mongodb.ObjectId(req.params.cansel_id) },
+      { $set: { order_status:"cansel"} }
+    );
+    await connection.close();
+    res.json(cansel);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong for pizza creation" });
   }
 });
 
