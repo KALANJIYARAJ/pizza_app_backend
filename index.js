@@ -479,4 +479,23 @@ app.delete("/deleteorder/:orderId", async (req, res) => {
   }
 });
 
+app.put("/ordercansel/:orderId", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+    const order = await db
+      .collection("order")
+      .updateOne(
+        { _id: mongodb.ObjectId(req.params.orderId) },
+        { $set: { order_status:"cancel"} }
+      );
+    await connection.close();
+    res.json(order);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong for order updation" });
+  }
+});
+
 app.listen(process.env.PORT || 3003);
