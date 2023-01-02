@@ -136,6 +136,70 @@ app.post("/reset/:userId", async (req, res) => {
   }
 });
 
+app.get("/user/:userId", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+    const user = await db.collection("users").find({ _id: mongodb.ObjectId(req.params.userId) }).toArray();
+    await connection.close();
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong for get user" });
+  }
+});
+
+
+//get users
+app.get("/users", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+    const users = await db.collection("users").find({}).toArray();
+    await connection.close();
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong for user creation" });
+  }
+});
+
+//edit user
+app.post("/edituser/:userId", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+
+    const user = await db
+      .collection("users")
+      .updateOne(
+        { _id: mongodb.ObjectId(req.params.userId) },
+        { $set: req.body }
+      );
+    await connection.close();
+    res.json(user);
+  } catch (error) {
+    res.status(400).json({ message: "Something went wrong" });
+  }
+});
+
+//delete user
+app.delete("/deleteuser/:userId", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+
+    const user = await db
+      .collection("users")
+      .deleteOne({ _id: mongodb.ObjectId(req.params.userId) });
+    await connection.close();
+    res.json({ message: "user delete successfully" });
+  } catch (error) {
+    res.status(400).json({ message: "Something went wrong" });
+  }
+});
+
+
+
+
 //create_Pizza
 app.post("/pizza", async (req, res) => {
   try {
@@ -151,7 +215,7 @@ app.post("/pizza", async (req, res) => {
   }
 });
 
-//get_pizza
+//get_pizzas
 app.get("/pizzas", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
@@ -164,18 +228,52 @@ app.get("/pizzas", async (req, res) => {
   }
 });
 
-//update_pizza
-app.post("/pizza/pId", async (req, res) => {
+//get_pizza
+app.get("/pizza/:pizzaId", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
     const db = connection.db("pizza_application");
-    const user = await db.collection("pizzas").updatetOne(req.body);
+    const pizza = await db.collection("pizzas").find({ _id: mongodb.ObjectId(req.params.pizzaId) }).toArray();
     await connection.close();
-    res.json({ message: "pizza created" });
+    res.json(pizza);
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong for get user" });
+  }
+});
+
+//update_pizza
+app.post("/editpizza/:pizzaId", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+    const pizza = await db
+      .collection("pizzas")
+      .updateOne(
+        { _id: mongodb.ObjectId(req.params.pizzaId) },
+        { $set: req.body }
+      )
+    await connection.close();
+    res.json(pizza);
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Something went wrong for pizza creation" });
+      .json({ message: "Something went wrong for pizza updation" });
+  }
+});
+
+//delete_pizza
+app.delete("/deletepizza/:pizzaId", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+
+    const pizza = await db
+      .collection("pizzas")
+      .deleteOne({ _id: mongodb.ObjectId(req.params.pizzaId) });
+    await connection.close();
+    res.json(pizza);
+  } catch (error) {
+    res.status(400).json({ message: "Something went wrong" });
   }
 });
 
@@ -196,7 +294,7 @@ app.post("/veggies_meats", async (req, res) => {
   }
 });
 
-//node
+//get veggies and meats
 app.get("/veggies_meats", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
@@ -209,6 +307,55 @@ app.get("/veggies_meats", async (req, res) => {
     res.json(veggies_meats);
   } catch (error) {
     res.status(500).json({ message: "Something went wrong for user creation" });
+  }
+});
+
+//get_vm
+app.get("/vm/:vmId", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+    const vm = await db.collection("veggies_meats").find({ _id: mongodb.ObjectId(req.params.vmId) }).toArray();
+    await connection.close();
+    res.json(vm);
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong for get user" });
+  }
+});
+
+//update_veggies and meats
+app.post("/editvm/:vmId", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+    const vm = await db
+      .collection("veggies_meats")
+      .updateOne(
+        { _id: mongodb.ObjectId(req.params.vmId) },
+        { $set: req.body }
+      )
+    await connection.close();
+    res.json(vm);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong for pizza updation" });
+  }
+});
+
+//delete_veggies and meats
+app.delete("/deletevm/:vmId", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+
+    const vm = await db 
+      .collection("veggies_meats")
+      .deleteOne({ _id: mongodb.ObjectId(req.params.vmId) });
+    await connection.close();
+    res.json(vm);
+  } catch (error) {
+    res.status(400).json({ message: "Something went wrong" });
   }
 });
 
@@ -228,14 +375,50 @@ app.post("/order", async (req, res) => {
   }
 });
 
-//get order
-app.get("/order/:user_id", async (req, res) => {
+//get orders
+app.get("/orders", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+    const veggies_meats = await db
+      .collection("order")
+      .aggregate([
+        {
+          '$unwind': {
+            'path': '$pizza'
+          }
+        }, {
+          '$project': {
+            '_id': 1, 
+            'name': '$name', 
+            'email': '$email', 
+            'phone': '$phone', 
+            'address': '$address', 
+            'payment_type': '$payment_type', 
+            'pizza_name': '$pizza.Pizza.pizza_name', 
+            'pizza_size': '$pizza.price', 
+            'total': '$total', 
+            'order_status': 1,
+            'payment_status':1
+          }
+        }
+      ])
+      .toArray();
+    await connection.close();
+    res.json(veggies_meats);
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong for user creation" });
+  }
+});
+
+//get order from user
+app.get("/order/:userId", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
     const db = connection.db("pizza_application");
     const order = await db
       .collection("order")
-      .find({ user_id: req.params.user_id })
+      .find({ user_id: req.params.userId})
       .toArray();
     await connection.close();
     res.json(order);
@@ -244,23 +427,54 @@ app.get("/order/:user_id", async (req, res) => {
   }
 });
 
-//cancel order
-app.put("/ordercansel/:cansel_id", async (req, res) => {
+//get order
+app.get("/orders/:orderId", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
     const db = connection.db("pizza_application");
-    const cansel = await db
-    .collection("order")
-    .updateOne(
-      { _id: mongodb.ObjectId(req.params.cansel_id) },
-      { $set: { order_status:"cansel"} }
-    );
+    const order = await db
+      .collection("order")
+      .find({_id: mongodb.ObjectId(req.params.orderId)})
+      .toArray();
     await connection.close();
-    res.json(cansel);
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong for get order" });
+  }
+});
+
+//update order
+app.post("/editorder/:orderId", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+    const order = await db
+      .collection("order")
+      .updateOne(
+        { _id: mongodb.ObjectId(req.params.orderId) },
+        { $set: {payment_status:req.body.payment_status, order_status:req.body.order_status} }
+      );
+    await connection.close();
+    res.json(order);
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Something went wrong for pizza creation" });
+      .json({ message: "Something went wrong for order updation" });
+  }
+});
+
+//delete order
+app.delete("/deleteorder/:orderId", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+    const order = await db
+      .collection("order")
+      .deleteOne({ _id: mongodb.ObjectId(req.params.orderId) });
+    await connection.close();
+    res.json(order);
+  } catch (error) {
+    res.status(400).json({ message: "Something went wrong for order delete" });
   }
 });
 
