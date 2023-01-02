@@ -395,7 +395,7 @@ app.get("/orders", async (req, res) => {
             'phone': '$phone', 
             'address': '$address', 
             'payment_type': '$payment_type', 
-            'pizza_name': '$pizza.Pizza.pizza_name', 
+            'pizza_name': '$pizza.pizza_name', 
             'pizza_size': '$pizza.price', 
             'total': '$total', 
             'order_status': 1,
