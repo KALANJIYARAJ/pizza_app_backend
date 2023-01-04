@@ -14,7 +14,7 @@ const PASSWORD = process.env.PASSWORD;
 
 app.use(
   cors({
-    orgin: "http://localhost:3000",
+    orgin: "https://brilliant-custard-f8013a.netlify.app",
   })
 );
 
