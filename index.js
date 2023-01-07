@@ -20,6 +20,25 @@ app.use(
 
 app.use(express.json());
 
+let authorize = (req, res, next) => {
+    try {
+      // Check if authorization token present
+      if (req.headers.authorization) {
+        // Check if the token is valid
+        let decodedToken = jwt.verify(req.headers.authorization, JWT_SECRET);
+        // if valid say next()
+        // if not valid say unauthorized
+        if (decodedToken) {
+          next();
+        } else {
+          res.status(401).json({ message: "Unauthorized" });
+        }
+      }
+    } catch (error) {
+      res.status(401).json({ message: "Unauthorized" });
+    }
+  };
+
 let account = [];
 
 //create_user
@@ -59,7 +78,8 @@ app.post("/login", async (req, res) => {
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
           expiresIn: "2m",
         });
-        res.json(user);
+        delete user.password;
+        res.json({user,token});
       } else {
         res.json({ message: "username or password incorrect" });
       }
@@ -324,7 +344,7 @@ app.get("/vm/:vmId", async (req, res) => {
 });
 
 //update_veggies and meats
-app.post("/editvm/:vmId", async (req, res) => {
+app.post("/editvm/:vmId",async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
     const db = connection.db("pizza_application");
