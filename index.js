@@ -76,7 +76,7 @@ app.post("/login", async (req, res) => {
       const compare = await bcrypt.compare(req.body.password, user.password);
       if (compare) {
         const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
-          expiresIn: "2m",
+          expiresIn: "10m",
         });
         delete user.password;
         res.json({user,token});
