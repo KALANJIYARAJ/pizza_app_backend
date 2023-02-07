@@ -20,25 +20,6 @@ app.use(
 
 app.use(express.json());
 
-let authorize = (req, res, next) => {
-    try {
-      // Check if authorization token present
-      if (req.headers.authorization) {
-        // Check if the token is valid
-        let decodedToken = jwt.verify(req.headers.authorization, JWT_SECRET);
-        // if valid say next()
-        // if not valid say unauthorized
-        if (decodedToken) {
-          next();
-        } else {
-          res.status(401).json({ message: "Unauthorized" });
-        }
-      }
-    } catch (error) {
-      res.status(401).json({ message: "Unauthorized" });
-    }
-  };
-
 let account = [];
 
 //create_user
@@ -79,7 +60,7 @@ app.post("/login", async (req, res) => {
           expiresIn: "10m",
         });
         delete user.password;
-        res.json({user,token});
+        res.json({ message: "login successfully", token, user });
       } else {
         res.json({ message: "username or password incorrect" });
       }
@@ -160,14 +141,16 @@ app.get("/user/:userId", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
     const db = connection.db("pizza_application");
-    const user = await db.collection("users").find({ _id: mongodb.ObjectId(req.params.userId) }).toArray();
+    const user = await db
+      .collection("users")
+      .find({ _id: mongodb.ObjectId(req.params.userId) })
+      .toArray();
     await connection.close();
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: "Something went wrong for get user" });
   }
 });
-
 
 //get users
 app.get("/users", async (req, res) => {
@@ -217,9 +200,6 @@ app.delete("/deleteuser/:userId", async (req, res) => {
   }
 });
 
-
-
-
 //create_Pizza
 app.post("/pizza", async (req, res) => {
   try {
@@ -253,7 +233,10 @@ app.get("/pizza/:pizzaId", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
     const db = connection.db("pizza_application");
-    const pizza = await db.collection("pizzas").find({ _id: mongodb.ObjectId(req.params.pizzaId) }).toArray();
+    const pizza = await db
+      .collection("pizzas")
+      .find({ _id: mongodb.ObjectId(req.params.pizzaId) })
+      .toArray();
     await connection.close();
     res.json(pizza);
   } catch (error) {
@@ -271,13 +254,33 @@ app.post("/editpizza/:pizzaId", async (req, res) => {
       .updateOne(
         { _id: mongodb.ObjectId(req.params.pizzaId) },
         { $set: req.body }
-      )
+      );
     await connection.close();
     res.json(pizza);
   } catch (error) {
     res
       .status(500)
       .json({ message: "Something went wrong for pizza updation" });
+  }
+});
+
+//update_stock
+app.post("/stock/:pizzaId", async (req, res) => {
+  try {
+    const connection = await mongoclient.connect(URL);
+    const db = connection.db("pizza_application");
+    const pizzaStock = await db
+      .collection("pizzas")
+      .updateOne(
+        { _id: mongodb.ObjectId(req.params.pizzaId) },
+        { $inc: { stock: req.body.number } }
+      );
+    await connection.close();
+    res.status(201).json(pizzaStock);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong for stock updation" });
   }
 });
 
@@ -335,7 +338,10 @@ app.get("/vm/:vmId", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
     const db = connection.db("pizza_application");
-    const vm = await db.collection("veggies_meats").find({ _id: mongodb.ObjectId(req.params.vmId) }).toArray();
+    const vm = await db
+      .collection("veggies_meats")
+      .find({ _id: mongodb.ObjectId(req.params.vmId) })
+      .toArray();
     await connection.close();
     res.json(vm);
   } catch (error) {
@@ -344,7 +350,7 @@ app.get("/vm/:vmId", async (req, res) => {
 });
 
 //update_veggies and meats
-app.post("/editvm/:vmId",async (req, res) => {
+app.post("/editvm/:vmId", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
     const db = connection.db("pizza_application");
@@ -353,7 +359,7 @@ app.post("/editvm/:vmId",async (req, res) => {
       .updateOne(
         { _id: mongodb.ObjectId(req.params.vmId) },
         { $set: req.body }
-      )
+      );
     await connection.close();
     res.json(vm);
   } catch (error) {
@@ -369,7 +375,7 @@ app.delete("/deletevm/:vmId", async (req, res) => {
     const connection = await mongoclient.connect(URL);
     const db = connection.db("pizza_application");
 
-    const vm = await db 
+    const vm = await db
       .collection("veggies_meats")
       .deleteOne({ _id: mongodb.ObjectId(req.params.vmId) });
     await connection.close();
@@ -404,25 +410,26 @@ app.get("/orders", async (req, res) => {
       .collection("order")
       .aggregate([
         {
-          '$unwind': {
-            'path': '$pizza'
-          }
-        }, {
-          '$project': {
-            '_id': 1, 
-            'name': '$name', 
-            'email': '$email', 
-            'phone': '$phone', 
-            'address': '$address', 
-            'payment_type': '$payment_type', 
-            'pizza_name': '$pizza.pizza_name', 
-            'pizza_size': '$pizza.size', 
-            'add_items':"$pizza.add_items",
-            'total': '$total', 
-            'order_status': 1,
-            'payment_status':1
-          }
-        }
+          $unwind: {
+            path: "$pizza",
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            name: "$name",
+            email: "$email",
+            phone: "$phone",
+            address: "$address",
+            payment_type: "$payment_type",
+            pizza_name: "$pizza.pizza_name",
+            pizza_size: "$pizza.size",
+            add_items: "$pizza.add_items",
+            total: "$total",
+            order_status: 1,
+            payment_status: 1,
+          },
+        },
       ])
       .toArray();
     await connection.close();
@@ -439,7 +446,7 @@ app.get("/order/:userId", async (req, res) => {
     const db = connection.db("pizza_application");
     const order = await db
       .collection("order")
-      .find({ user_id: req.params.userId})
+      .find({ user_id: req.params.userId })
       .toArray();
     await connection.close();
     res.json(order);
@@ -455,7 +462,7 @@ app.get("/orders/:orderId", async (req, res) => {
     const db = connection.db("pizza_application");
     const order = await db
       .collection("order")
-      .find({_id: mongodb.ObjectId(req.params.orderId)})
+      .find({ _id: mongodb.ObjectId(req.params.orderId) })
       .toArray();
     await connection.close();
     res.json(order);
@@ -469,12 +476,15 @@ app.post("/editorder/:orderId", async (req, res) => {
   try {
     const connection = await mongoclient.connect(URL);
     const db = connection.db("pizza_application");
-    const order = await db
-      .collection("order")
-      .updateOne(
-        { _id: mongodb.ObjectId(req.params.orderId) },
-        { $set: {payment_status:req.body.payment_status, order_status:req.body.order_status} }
-      );
+    const order = await db.collection("order").updateOne(
+      { _id: mongodb.ObjectId(req.params.orderId) },
+      {
+        $set: {
+          payment_status: req.body.payment_status,
+          order_status: req.body.order_status,
+        },
+      }
+    );
     await connection.close();
     res.json(order);
   } catch (error) {
@@ -507,7 +517,7 @@ app.put("/ordercansel/:orderId", async (req, res) => {
       .collection("order")
       .updateOne(
         { _id: mongodb.ObjectId(req.params.orderId) },
-        { $set: { order_status:"cancel"} }
+        { $set: { order_status: "cancel" } }
       );
     await connection.close();
     res.json(order);
